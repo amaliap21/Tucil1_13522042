@@ -1,0 +1,6 @@
+5               // jumlah_token
+BD 1C 7A 55 E9  // token
+7               // 
+6 6
+3
+4
