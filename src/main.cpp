@@ -1,179 +1,97 @@
 #include <iostream>
 #include <fstream>
-#include <string>
 #include <vector>
-#include <sstream>
+#include <string>
+#include <utility>
+#include "solver.hpp"
 
 using namespace std;
 
-/***** MENYIMPAN DATA HASIL OUTPUT *****/
-/*
-1. Bobot Hadiah
-2. Isi Buffer *jika ada*
-3. Koordinat (dari list koordinat) *jika ada*
-4. Waktu eksekusi
-*/
-
-struct Koordinat
+int main()
 {
-    int x;
-    int y;
-};
+    Solver solver;
 
-struct DataSave
-{
-    int bobotHadiah;
-    string isiBuffer;
-    vector<Koordinat> koordinatList;
-};
+    // Open the input file
+    ifstream inputFile("load.txt");
+    if (!inputFile)
+    {
+        cerr << "Unable to open input file." << endl;
+        return 1;
+    }
 
-/***** MEMUAT DATA DARI INPUT (.txt) *****/
-/*
-1. Ukuran buffer
-2. Ukuran matriks (m x n) / baris x kolom
-3. Koordinat (dari list koordinat) *jika ada*
-4. Waktu eksekusi
-*/
+    int buffer;
+    inputFile >> buffer;
 
-struct Ukuran
-{
-    int baris;
-    int kolom;
-};
+    int matrixWidth, matrixHeight;
+    inputFile >> matrixWidth >> matrixHeight;
 
-struct DataLoad
-{
-    int ukuranBuffer;
-    vector<Ukuran> ukuranMatriks;
-    vector<vector<string>> matriks;
+    vector<vector<string>> codeMatrix(matrixHeight, vector<string>(matrixWidth));
+    for (int i = 0; i < matrixHeight; ++i)
+    {
+        for (int j = 0; j < matrixWidth; ++j)
+        {
+            inputFile >> codeMatrix[i][j];
+        }
+    }
+
     int numberOfSequences;
-    vector<string> sequences;
-    vector<int> sequenceReward;
-};
+    inputFile >> numberOfSequences;
 
-// Fungsi untuk memuat data dari file
-DataLoad loadData(const string &filename)
-{
-    DataLoad data;
-    ifstream file(filename);
+    vector<vector<string>> sequences(numberOfSequences);
+    vector<int> sequenceRewards(numberOfSequences);
 
-    if (file.is_open())
+    for (int i = 0; i < numberOfSequences; ++i)
     {
-        string line;
-        // Membaca ukuran buffer
-        getline(file, line);
-        stringstream(line) >> data.ukuranBuffer;
-
-        // Membaca ukuran matriks
-        getline(file, line);
-        stringstream ss(line);
-        Ukuran ukuran;
-        ss >> ukuran.baris >> ukuran.kolom;
-        data.ukuranMatriks.push_back(ukuran);
-
-        // Membaca isi matriks
-        for (int i = 0; i < ukuran.baris; ++i)
+        int sequenceLength;
+        inputFile >> sequenceLength;
+        sequences[i].resize(sequenceLength);
+        for (int j = 0; j < sequenceLength; ++j)
         {
-            getline(file, line);
-            stringstream ss(line);
-            vector<string> row;
-            string token;
-
-            for (int j = 0; j < ukuran.kolom; ++j)
-            {
-                ss >> token;
-                row.push_back(token);
-            }
-            data.matriks.push_back(row);
+            inputFile >> sequences[i][j];
         }
-
-        // Membaca jumlah sekuens
-        getline(file, line);
-        stringstream(line) >> data.numberOfSequences;
-
-        // Membaca sekuens dan reward
-        for (int i = 0; i < data.numberOfSequences; ++i)
-        {
-            getline(file, line); // Membaca sekuens
-            data.sequences.push_back(line);
-            getline(file, line); // Membaca reward
-            int reward;
-            stringstream(line) >> reward;
-            data.sequenceReward.push_back(reward);
-        }
-
-        file.close();
-        cout << "Data berhasil dimuat dari " << filename << endl;
+        inputFile >> sequenceRewards[i];
     }
-    else
-    {
-        cout << "Gagal membuka file untuk dimuat" << endl;
-    }
-    return data;
-}
 
-// Prosedur memuat data dari file
-void load()
-{
-    // Memuat data dari file
-    DataLoad data = loadData("../test/load.txt");
+    // Close the input file
+    inputFile.close();
 
-    // Menampilkan data yang telah dimuat
-    cout << "Ukuran buffer: " << data.ukuranBuffer << endl;
-    cout << "Ukuran matriks: " << data.ukuranMatriks[0].baris << " x " << data.ukuranMatriks[0].kolom << endl;
-    cout << "Isi matriks:" << endl;
-    for (const vector<string> &row : data.matriks)
+    // Solve the problem
+    vector<vector<string>> bestBuffer;
+    vector<vector<pair<int, int>>> bestPath;
+    int bestReward;
+    double duration;
+    tie(bestBuffer, bestPath, bestReward, duration) = solver.solve(buffer, codeMatrix, sequences, sequenceRewards);
+
+    // Output the result
+    cout << "Best Reward: " << bestReward << endl;
+    cout << "Best Buffer:" << endl;
+    for (const auto &p : bestBuffer)
     {
-        for (const string &cell : row)
+        for (const auto &s : p)
         {
-            cout << cell << " ";
+            cout << s << " ";
         }
         cout << endl;
     }
-    cout << "Jumlah sekuens: " << data.numberOfSequences << endl;
-    for (int i = 0; i < data.numberOfSequences; ++i)
+    cout << "Best Path:" << endl;
+    for (const auto &path : bestPath)
     {
-        cout << "Sekuens: " << data.sequences[i] << ", reward: " << data.sequenceReward[i] << endl;
-    }
-}
-
-// Fungsi untuk menyimpan data ke file
-void saveData(const string &filename, const DataSave &data, int waktuEksekusi)
-{
-    ofstream file(filename);
-
-    if (file.is_open())
-    {
-        file << data.bobotHadiah << endl;
-        file << data.isiBuffer << endl;
-        for (const Koordinat &koordinat : data.koordinatList)
+        for (const auto &p : path)
         {
-            file << koordinat.x << ", " << koordinat.y << endl;
+            cout << "(" << p.first << ", " << p.second << ") ";
         }
-        file << endl
-             << waktuEksekusi << " ms" << endl;
-        file.close();
-        cout << "Data berhasil disimpan ke " << filename << endl;
+        cout << endl;
     }
-    else
+    cout << "Duration: " << duration << " ms" << endl;
+
+    char saveSolution;
+    cout << "Do you want to save the solution? (y/n): ";
+    cin >> saveSolution;
+    if (saveSolution == 'y' || saveSolution == 'Y')
     {
-        cout << "Gagal membuka file untuk disimpan" << endl;
+        // Save the solution to a file or database
+        cout << "Solution saved." << endl;
     }
-}
-
-int main()
-{
-    /*  SAVING DATA (output)
-     */
-    // DataSave yang akan disimpan
-    DataSave dataToSave = {50, "7A BD 7A BD 1C BD 55", {{1, 1}, {1, 4}, {3, 4}, {3, 5}, {6, 5}, {6, 4}, {5, 4}}};
-
-    // Simpan data ke file
-    saveData("../test/save.txt", dataToSave, 300);
-
-    /*  LOADING DATA (input)
-     */
-    load();
 
     return 0;
 }
