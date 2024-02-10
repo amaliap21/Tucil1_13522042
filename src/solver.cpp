@@ -1,4 +1,4 @@
-#include "solver.h"
+#include "solver.hpp"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -35,23 +35,23 @@ bool BreachProtocolSolver::hasBeenVisited(vector<Token> &visited, Token &token)
 void BreachProtocolSolver::dfs(int x, int y, int direction, int currentReward, vector<bool> &sequenceMatched, vector<Token> &visited)
 {
     if (buffer.size() > bufferSize || hasBeenVisited(visited, matrix[x][y]))
-        return; // Ensure we don't exceed buffer size and avoid revisiting tokens
+        return;
 
     visited.push_back(matrix[x][y]); // Mark current token as visited
 
-    // Add current token to buffer
+    // Tambahkan token ke buffer
     buffer.push_back(matrix[x][y]);
 
-    // Check each sequence
+    // Cek apakah buffer cocok dengan sequence
     for (int i = 0; i < sequences.size(); ++i)
     {
         if (!sequenceMatched[i] && isSequenceMatched(sequences[i], currentReward, visited))
         {
-            sequenceMatched[i] = true; // Mark sequence as matched
+            sequenceMatched[i] = true;
         }
     }
 
-    // Alternate between vertical and horizontal movements
+    // Pergerakan Rekursif (DFS) Vertikal atau Horizontal
     if (direction == 0)
     {
         // Vertical
@@ -75,31 +75,32 @@ void BreachProtocolSolver::dfs(int x, int y, int direction, int currentReward, v
         }
     }
 
-    // Remove the last token (backtrack) and remove current token from visited list
+    // Backtracking
     buffer.pop_back();
     visited.pop_back();
     for (int i = 0; i < sequences.size(); ++i)
     {
-        sequenceMatched[i] = false; // Reset sequence matched status
+        sequenceMatched[i] = false; // Reset sequenceMatched
     }
 }
 
 void BreachProtocolSolver::solve()
 {
     vector<bool> sequenceMatched(sequences.size(), false);
-    vector<Token> visited; // Initialize visited vector
-    // Initial call to DFS for each token in the first row
+    vector<Token> visited;
+
+    // Berjalan ke setiap token di baris pertama
     for (int y = 0; y < matrix[0].size(); ++y)
     {
-        dfs(0, y, 0, 0, sequenceMatched, visited); // Start with horizontal movement
+        dfs(0, y, 0, 0, sequenceMatched, visited);
     }
 }
 
 bool BreachProtocolSolver::isSequenceMatched(const Sequence &sequence, int &currentReward, const vector<Token> &visited)
 {
-    // Check if sequence is matched in the buffer
+    // Cek apakah buffer cocok dengan sequence
     if (buffer.size() < sequence.tokens.size())
-        return false; // Buffer is too small
+        return false;
 
     bool matched = true;
     for (int i = 0; i < sequence.tokens.size(); ++i)
@@ -113,11 +114,12 @@ bool BreachProtocolSolver::isSequenceMatched(const Sequence &sequence, int &curr
 
     if (matched)
     {
-        currentReward += sequence.reward; // Update current reward
+        currentReward += sequence.reward;
+        // Max reward yang didapatkan
         if (currentReward > maxReward)
         {
-            maxReward = currentReward; // Update max reward
-            solutionBuffer = buffer;   // Update solution buffer
+            maxReward = currentReward;
+            solutionBuffer = buffer;
         }
         return true;
     }
@@ -127,14 +129,23 @@ bool BreachProtocolSolver::isSequenceMatched(const Sequence &sequence, int &curr
 
 void BreachProtocolSolver::printSolution()
 {
-    cout << maxReward << endl;
-    for (const auto &token : solutionBuffer)
+    if (!solutionBuffer.empty())
     {
-        cout << token.value << " ";
+        cout << maxReward << endl;
+        for (const auto &token : solutionBuffer)
+        {
+            cout << token.value << " ";
+        }
+        cout << endl;
+        for (const auto &token : solutionBuffer)
+        {
+            cout << token.y + 1 << ", " << token.x + 1 << endl;
+        }
     }
-    cout << endl;
-    for (const auto &token : solutionBuffer)
+
+    else
     {
-        cout << token.y + 1 << ", " << token.x + 1 << endl;
+        cout << "Tidak ada buffer dan sequence yang cocok. Tidak ada solusi yang ditemukan!" << endl;
+        return;
     }
 }

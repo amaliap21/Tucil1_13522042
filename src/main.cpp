@@ -1,5 +1,4 @@
-// main.cpp
-#include "solver.h"
+#include "solver.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -10,12 +9,19 @@
 
 using namespace std;
 
-void writeToFile(const string &filename, int buffer_size, int matrix_width, int matrix_height, const vector<vector<string>> &matrix, int number_of_sequences, const vector<vector<string>> &sequences, const vector<vector<int>> &sequence_rewards)
+void writeToFile(const string &filename,
+                 int buffer_size,
+                 int matrix_width,
+                 int matrix_height,
+                 const vector<vector<string>> &matrix,
+                 int number_of_sequences,
+                 const vector<vector<string>> &sequences,
+                 const vector<vector<int>> &sequence_rewards)
 {
     ofstream file(filename);
     if (!file.is_open())
     {
-        cerr << "Failed to open file for writing." << endl;
+        cerr << "Gagal membuka file." << endl;
         return;
     }
 
@@ -45,7 +51,7 @@ void writeToFile(const string &filename, int buffer_size, int matrix_width, int 
         file << endl;
 
         // Menulis reward sequence (hanya sekali) dengan angka acak antara -100 hingga 100
-        int random_reward = rand() % 201 - 100; // Menghasilkan angka acak dari -100 hingga 100
+        int random_reward = rand() % 201 - 100;
 
         file << random_reward;
 
@@ -58,9 +64,15 @@ void writeToFile(const string &filename, int buffer_size, int matrix_width, int 
     file.close();
 }
 
-void randomizer(int jumlah_token_unik, const vector<string> &token, int ukuran_buffer, int width, int height, int jumlah_sekuens, int ukuran_maksimal_sekuens)
+void randomizer(int jumlah_token_unik,
+                const vector<string> &token,
+                int ukuran_buffer,
+                int width,
+                int height,
+                int jumlah_sekuens,
+                int ukuran_maksimal_sekuens)
 {
-    // Seed the random number generator
+    // Random number generator
     srand(time(NULL));
 
     // Matriks random
@@ -154,7 +166,7 @@ vector<Sequence> readSequences(ifstream &inputFile, int numberOfSequences)
             tokens.push_back(token);
         }
         inputFile >> reward;
-        inputFile.ignore(); // Ignore newline character after reading reward
+        inputFile.ignore();
         sequences.emplace_back(tokens, reward);
     }
     return sequences;
@@ -162,7 +174,7 @@ vector<Sequence> readSequences(ifstream &inputFile, int numberOfSequences)
 
 int main(int argc, char *argv[])
 {
-    string filename; // Example filename, change as needed
+    string filename;
 
     cout << "Apakah ingin menggunakan randomizer untuk matrix dan sequences? (y/n): ";
 
@@ -183,7 +195,7 @@ int main(int argc, char *argv[])
 
     if (argc > 1)
     {
-        filename = argv[1]; // Allow filename to be passed as argument
+        filename = argv[1];
     }
 
     ifstream inputFile(filename);
@@ -195,12 +207,12 @@ int main(int argc, char *argv[])
 
     int bufferSize, width, height, numberOfSequences;
     inputFile >> bufferSize >> width >> height;
-    inputFile.ignore(); // Ignore newline character after reading header
+    inputFile.ignore();
 
     auto matrix = readMatrix(inputFile, width, height);
 
     inputFile >> numberOfSequences;
-    inputFile.ignore(); // Ignore newline character after reading number of sequences
+    inputFile.ignore();
 
     auto sequences = readSequences(inputFile, numberOfSequences);
 
