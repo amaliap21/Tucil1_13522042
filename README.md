@@ -68,4 +68,4 @@ run.sh
 
 | **NIM**  |   **Nama**   |
 | :------: | :----------: |
-| 13521042 | Amalia Putri |
+| 13522042 | Amalia Putri |
