@@ -1,3 +1,3 @@
 cd src
-g++ utilities.cpp -o ../bin/utilities.exe
-"../bin/utilities.exe"
+g++ main.cpp helpers.cpp -o main.exe
+"main.exe"

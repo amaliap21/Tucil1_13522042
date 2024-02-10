@@ -1,7 +1,0 @@
-Kalo gitu lu gabakal nemu mel kayanya
-Karna kan ada token” yang sifatnya emang harus di skip
-Ini aga kurang bruteforce
-Jadi misal sekuens prizenya itu bc cd ef
-Tapi adanya tuh
-aa bb cc bc cd ef
-lu berarti kalo gagal didepan ga lu lanjut ya?
