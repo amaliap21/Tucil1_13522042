@@ -2,10 +2,8 @@
 #include <fstream>
 #include <vector>
 #include <string>
-#include <algorithm>
 #include <chrono>
-
-#include "../Save-Load/save-load.cpp" // include file save-load.hpp
+#include <algorithm>
 
 using namespace std;
 using namespace std::chrono;
@@ -17,108 +15,125 @@ struct Position
     int col;
 };
 
+// Data structure to store information about sequences
+struct Sequence
+{
+    string sequence;
+    int reward;
+};
+
+// Data structure to store the loaded data from input file
+struct InputData
+{
+    int bufferSize;
+    vector<vector<string>> matrix;
+    vector<Sequence> sequences;
+};
+
 // Function to parse the input file and load the data into appropriate variables
-DataLoad parseInput(const string &filename)
+InputData parseInput(const string &filename)
 {
     ifstream file(filename);
-    DataLoad data;
+    InputData data;
 
     if (!file.is_open())
     {
         cerr << "Error opening file." << endl;
-        exit(1);
+            ;
     }
 
-    string line;
-    // Membaca ukuran buffer
-    getline(file, line);
-    stringstream(line) >> data.ukuranBuffer;
+    // Read buffer size
+    file >> data.bufferSize;
 
-    // Membaca ukuran matriks
-    getline(file, line);
-    stringstream ss(line);
-    Ukuran ukuran;
-    ss >> ukuran.baris >> ukuran.kolom;
-    data.ukuranMatriks.push_back(ukuran);
-
-    // Membaca isi matriks
-    for (int i = 0; i < ukuran.baris; ++i)
+    // Read matrix dimensions and matrix itself
+    int width, height;
+    file >> width >> height;
+    data.matrix.resize(height, vector<string>(width));
+    for (int i = 0; i < height; ++i)
     {
-        getline(file, line);
-        stringstream ss(line);
-        vector<string> row;
-        string token;
-
-        for (int j = 0; j < ukuran.kolom; ++j)
+        for (int j = 0; j < width; ++j)
         {
-            ss >> token;
-            row.push_back(token);
+            file >> data.matrix[i][j];
         }
-        data.matriks.push_back(row);
     }
 
-    // Membaca jumlah sekuens
-    getline(file, line);
-    stringstream(line) >> data.numberOfSequences;
+    // Read number of sequences
+    int numSequences;
+    file >> numSequences;
 
-    // Membaca sekuens dan bobot
-    for (int i = 0; i < data.numberOfSequences; ++i)
+    // Read sequences and their rewards
+    for (int i = 0; i < numSequences; ++i)
     {
-        getline(file, line); // Membaca sekuens
-        data.sequences.push_back(line);
-
-        getline(file, line); // Membaca bobot
-        int bobot;
-        stringstream(line) >> bobot;
-        data.sequenceReward.push_back(bobot);
+        string sequence;
+        int reward;
+        file >> sequence >> reward;
+        data.sequences.push_back({sequence, reward});
     }
 
     file.close();
-    cout << "Data berhasil dimuat dari " << filename << endl;
     return data;
 }
 
 // Function to check if a given position is valid in the matrix
-bool isValidPosition(int row, int col, int matrixSize)
+bool isValidPosition(int row, int col, int numRows, int numCols)
 {
-    return row >= 0 && row < matrixSize && col >= 0 && col < matrixSize;
+    return row >= 0 && row < numRows && col >= 0 && col < numCols;
 }
 
-// Function to perform a depth-first search to find all sequences starting from a given position
-void dfs(vector<vector<string>> &matrix, vector<string> &sequences, int bufferSize, int row, int col, vector<Position> &path, vector<vector<bool>> &visited, vector<vector<bool>> &usedSequences, vector<vector<Position>> &solution)
+// Function to perform a depth-first search to match sequences starting from a given position
+void dfs(const vector<vector<string>> &matrix, const vector<Sequence> &sequences, int bufferSize, int row, int col, vector<Position> &path, vector<vector<bool>> &visited, vector<vector<bool>> &usedSequences, vector<Position> &bestPath, int &bestReward, int &totalSteps)
 {
-    if (path.size() == bufferSize)
+    if (path.size() == bufferSize || path.size() == sequences[0].sequence.size())
     {
-        solution.push_back(path);
+        // Calculate reward for the current path
+        int reward = 0;
+        for (const auto &pos : path)
+        {
+            reward += sequences[matrix[pos.row][pos.col][0] - '0'].reward;
+        }
+
+        // Update best reward and path if the current path is better
+        if (reward > bestReward || (reward == bestReward && path.size() < totalSteps))
+        {
+            bestReward = reward;
+            bestPath = path;
+            totalSteps = path.size();
+        }
         return;
     }
 
     visited[row][col] = true;
     path.push_back({row, col});
 
-    for (int i = -1; i <= 1; ++i)
+    // Define possible movements: alternate between vertical and horizontal
+    const vector<int> dr = {-1, 0, 1, 0}; // vertical then horizontal
+    const vector<int> dc = {0, 1, 0, -1};
+
+    // Determine the direction to start (vertical or horizontal)
+    int startDir = path.size() % 2; // 0 for vertical, 1 for horizontal
+
+    for (int i = 0; i < 4; ++i)
     {
-        for (int j = -1; j <= 1; ++j)
+        int dir = (startDir + i) % 4;
+        int newRow = row + dr[dir];
+        int newCol = col + dc[dir];
+        if (isValidPosition(newRow, newCol, matrix.size(), matrix[0].size()) && !visited[newRow][newCol])
         {
-            if (i == 0 && j == 0)
-                continue;
-            int newRow = row + i;
-            int newCol = col + j;
-            if (isValidPosition(newRow, newCol, matrix.size()) && !visited[newRow][newCol])
+            string sequenceSoFar;
+            for (const auto &pos : path)
             {
-                string sequenceSoFar = matrix[newRow][newCol];
-                for (const auto &pos : path)
+                sequenceSoFar += matrix[pos.row][pos.col];
+            }
+            sequenceSoFar += matrix[newRow][newCol];
+
+            // Check if the current sequence is a valid one
+            for (const auto &seq : sequences)
+            {
+                if (sequenceSoFar.find(seq.sequence) == 0 && !usedSequences[path.size()][seq.sequence[0] - '0'])
                 {
-                    sequenceSoFar += matrix[pos.row][pos.col];
-                }
-                for (const auto &seq : sequences)
-                {
-                    if (sequenceSoFar.find(seq) != string::npos && !usedSequences[path.size()][seq[0] - '0'])
-                    {
-                        usedSequences[path.size()][seq[0] - '0'] = true;
-                        dfs(matrix, sequences, bufferSize, newRow, newCol, path, visited, usedSequences, solution);
-                        usedSequences[path.size()][seq[0] - '0'] = false;
-                    }
+                    usedSequences[path.size()][seq.sequence[0] - '0'] = true;
+                    dfs(matrix, sequences, bufferSize, newRow, newCol, path, visited, usedSequences, bestPath, bestReward, totalSteps);
+                    usedSequences[path.size()][seq.sequence[0] - '0'] = false;
                 }
             }
         }
@@ -131,144 +146,73 @@ void dfs(vector<vector<string>> &matrix, vector<string> &sequences, int bufferSi
 // Function to find the optimal solution
 void findOptimalSolution(const string &filename)
 {
-    DataLoad data = parseInput(filename);
+    InputData data = parseInput(filename);
 
-    vector<vector<Position>> solution;
-    vector<vector<bool>> visited(data.ukuranMatriks[0].baris, vector<bool>(data.ukuranMatriks[0].kolom, false));
-    vector<vector<bool>> usedSequences(data.ukuranBuffer + 1, vector<bool>(10, false)); // Assuming single digit sequences
+    int numRows = data.matrix.size();
+    int numCols = data.matrix[0].size();
+
+    vector<vector<bool>> visited(numRows, vector<bool>(numCols, false));
+    vector<vector<bool>> usedSequences(data.bufferSize + 1, vector<bool>(100, false)); // Assuming two-digit alphanumeric sequences
 
     auto start = high_resolution_clock::now();
 
+    // Initialize variables to store the best solution
+    int bestReward = 0;
+    int totalSteps = 0;
+    vector<Position> bestPath;
+
     // Perform DFS from each position in the matrix
-    for (int i = 0; i < data.ukuranMatriks[0].baris; ++i)
+    for (int i = 0; i < numRows; ++i)
     {
-        for (int j = 0; j < data.ukuranMatriks[0].kolom; ++j)
+        for (int j = 0; j < numCols; ++j)
         {
-            vector<Position> path;
-            dfs(data.matriks, data.sequences, data.ukuranBuffer, i, j, path, visited, usedSequences, solution);
+            // Reset variables for each search
+            vector<Position> currentPath;
+            dfs(data.matrix, data.sequences, data.bufferSize, i, j, currentPath, visited, usedSequences, bestPath, bestReward, totalSteps);
         }
     }
 
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
 
-    // Find the solution with the highest reward
-    int maxReward = 0;
-    int maxIdx = -1;
-    for (int i = 0; i < solution.size(); ++i)
-    {
-        int reward = 0;
-        for (const auto &pos : solution[i])
-        {
-            reward += data.sequenceReward[pos.row * data.ukuranMatriks[0].kolom + pos.col];
-        }
-        if (reward > maxReward)
-        {
-            maxReward = reward;
-            maxIdx = i;
-        }
-    }
-
     // Output the solution
-    cout << "Output (solusi):" << endl;
-    cout << maxReward << endl; // Output the maximum reward
-    // Output the buffer
-    for (const auto &pos : solution[maxIdx])
+    cout << "Total bobot hadiah: " << bestReward << " poin" << endl;
+    cout << "Total langkah: " << totalSteps << " langkah" << endl;
+    cout << "Solusi optimal: ";
+    for (const auto &pos : bestPath)
     {
-        cout << data.matriks[pos.row][pos.col] << " ";
+        cout << "(" << pos.row + 1 << ", " << pos.col + 1 << ") ";
     }
     cout << endl;
-    // Output the coordinates
-    for (const auto &pos : solution[maxIdx])
-    {
-        cout << pos.row + 1 << ", " << pos.col + 1 << endl;
-    }
-    cout << endl
-         << duration.count() << " ms" << endl;
+    cout << "Waktu eksekusi program: " << duration.count() << " ms" << endl;
 
-    // Ask if the solution should be saved
-    char save;
+    // Prompt for saving solution to a file
     cout << "Apakah ingin menyimpan solusi? (y/n)" << endl;
-    cin >> save;
-    if (save == 'y' || save == 'Y')
+    char choice;
+    cin >> choice;
+    if (choice == 'y' || choice == 'Y')
     {
-        // Save the solution here
-        DataSave dataToSave;
-        dataToSave.bobotHadiah = maxReward; // Use the maximum reward
-        // Use the buffer from the optimal solution
-        for (const auto &pos : solution[maxIdx])
+        // Save solution to output file
+        ofstream outputFile("output.txt");
+        if (outputFile.is_open())
         {
-            dataToSave.isiBuffer += data.matriks[pos.row][pos.col] + " ";
-        }
-        // Use the coordinates from the optimal solution
-        for (const auto &pos : solution[maxIdx])
-        {
-            dataToSave.koordinatList.push_back({pos.row + 1, pos.col + 1}); // Adjust row and col indices to start from 1
-        }
-        // Simpan data ke file
-        string fileSave;
-        cout << "Masukkan nama file untuk disimpan: ";
-        cin >> fileSave;
-        saveData("../test/" + fileSave, dataToSave, duration.count()); // Menyimpan durasi eksekusi
-    }
-}
-
-
-void dfs(vector<vector<string>> &matrix, vector<string> &sequences, int bufferSize, int row, int col, vector<Position> &path, vector<vector<bool>> &visited, vector<vector<bool>> &usedSequences, vector<vector<Position>> &solution, int &maxReward, DataLoad &data)
-{
-    if (path.size() == bufferSize)
-    {
-        int reward = 0;
-        for (const auto &pos : path)
-        {
-            reward += data.sequenceReward[pos.row * data.ukuranMatriks[0].kolom + pos.col];
-        }
-        if (reward > maxReward)
-        {
-            maxReward = reward;
-            solution.clear();
-            solution.push_back(path);
-        }
-        else if (reward == maxReward)
-        {
-            solution.push_back(path);
-        }
-        return;
-    }
-
-    visited[row][col] = true;
-    path.push_back({row, col});
-
-    for (int i = -1; i <= 1; ++i)
-    {
-        for (int j = -1; j <= 1; ++j)
-        {
-            if (i == 0 && j == 0)
-                continue;
-            int newRow = row + i;
-            int newCol = col + j;
-            if (isValidPosition(newRow, newCol, matrix.size()) && !visited[newRow][newCol])
+            outputFile << bestReward << endl;
+            if (bestReward > 0)
             {
-                string sequenceSoFar = matrix[newRow][newCol];
-                for (const auto &pos : path)
+                for (const auto &pos : bestPath)
                 {
-                    sequenceSoFar += matrix[pos.row][pos.col];
-                }
-                for (const auto &seq : sequences)
-                {
-                    if (sequenceSoFar.find(seq) != string::npos && !usedSequences[path.size()][seq[0] - '0'])
-                    {
-                        usedSequences[path.size()][seq[0] - '0'] = true;
-                        dfs(matrix, sequences, bufferSize, newRow, newCol, path, visited, usedSequences, solution, maxReward, data);
-                        usedSequences[path.size()][seq[0] - '0'] = false;
-                    }
+                    outputFile << pos.row + 1 << ", " << pos.col + 1 << endl;
                 }
             }
+            outputFile << "Waktu eksekusi program: " << duration.count() << " ms" << endl;
+            outputFile.close();
+            cout << "Solusi berhasil disimpan dalam file output.txt" << endl;
+        }
+        else
+        {
+            cout << "Error: Gagal menyimpan solusi ke file." << endl;
         }
     }
-
-    path.pop_back();
-    visited[row][col] = false;
 }
 
 int main()
