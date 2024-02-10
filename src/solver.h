@@ -1,5 +1,5 @@
-#ifndef HELPERS_H
-#define HELPERS_H
+#ifndef SOLVER_H
+#define SOLVER_H
 
 #include <vector>
 #include <string>

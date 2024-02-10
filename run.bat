@@ -1,3 +1,3 @@
 cd src
-g++ main.cpp helpers.cpp -o main.exe
-"main.exe"
+g++ main.cpp solver.cpp -o ../bin/main.exe
+"../bin/main.exe"

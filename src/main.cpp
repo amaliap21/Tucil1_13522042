@@ -1,5 +1,5 @@
 // main.cpp
-#include "helpers.h"
+#include "solver.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -36,13 +36,18 @@ void writeToFile(const string &filename, int buffer_size, int matrix_width, int 
     {
         for (const auto &token : sequences[i])
         {
-            file << token << " ";
+            file << token;
+            if (&token != &sequences[i].back())
+            {
+                file << " ";
+            }
         }
         file << endl;
 
         // Menulis reward sequence (hanya sekali) dengan angka acak antara -100 hingga 100
         int random_reward = rand() % 201 - 100; // Menghasilkan angka acak dari -100 hingga 100
-        file << random_reward << " ";
+
+        file << random_reward;
 
         if (i < number_of_sequences - 1)
         {
@@ -80,7 +85,7 @@ void randomizer(int jumlah_token_unik, const vector<string> &token, int ukuran_b
         }
     }
 
-    writeToFile("random.txt", ukuran_buffer, width, height, matrix, jumlah_sekuens, sequences, sequence_rewards);
+    writeToFile("../test/random.txt", ukuran_buffer, width, height, matrix, jumlah_sekuens, sequences, sequence_rewards);
 }
 
 void randomMatrixSequence()
@@ -167,12 +172,13 @@ int main(int argc, char *argv[])
     if (isRandom == "y" || isRandom == "Y")
     {
         randomMatrixSequence();
-        filename = "random.txt";
+        filename = "../test/random.txt";
     }
     else
     {
         cout << "Masukkan nama file: ";
         cin >> filename;
+        filename = "../test/" + filename;
     }
 
     if (argc > 1)

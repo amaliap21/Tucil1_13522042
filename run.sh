@@ -1,4 +1,3 @@
-#!/bin/bash
 cd src
-g++ main.cpp ADT/Save-Load/save-load.cpp -o ../bin/main
+g++ main.cpp solver.cpp -o ../bin/main
 ../bin/main

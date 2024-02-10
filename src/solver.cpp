@@ -1,4 +1,4 @@
-#include "helpers.h"
+#include "solver.h"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -125,3 +125,16 @@ bool BreachProtocolSolver::isSequenceMatched(const Sequence &sequence, int &curr
     return false;
 }
 
+void BreachProtocolSolver::printSolution()
+{
+    cout << maxReward << endl;
+    for (const auto &token : solutionBuffer)
+    {
+        cout << token.value << " ";
+    }
+    cout << endl;
+    for (const auto &token : solutionBuffer)
+    {
+        cout << token.y + 1 << ", " << token.x + 1 << endl;
+    }
+}

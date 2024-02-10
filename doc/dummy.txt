@@ -2,4 +2,3 @@ Berkas laporan yang dikumpulkan adalah laporan dalam bentuk PDF yang setidaknya 
 1. Algoritma brute force (deskripsi langkah-langkahnya, bukan notasi pseudocode).
 2. Source program dalam bahasa pemrograman yang dipilih (pastikan bahwa program telah dapat dijalankan).
 3. Tangkapan layar yang memperlihatkan input dan output (minimal 6 contoh).
-4. Pranala ke repository yang berisi kode program.
