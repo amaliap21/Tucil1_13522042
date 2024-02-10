@@ -37,7 +37,7 @@ void BreachProtocolSolver::dfs(int x, int y, int direction, int currentReward, v
     if (buffer.size() > bufferSize || hasBeenVisited(visited, matrix[x][y]))
         return;
 
-    visited.push_back(matrix[x][y]); // Mark current token as visited
+    visited.push_back(matrix[x][y]); 
 
     // Tambahkan token ke buffer
     buffer.push_back(matrix[x][y]);

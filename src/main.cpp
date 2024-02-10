@@ -52,7 +52,7 @@ void writeToFile(const string &filename,
         }
         file << endl;
 
-        // Menulis reward sequence (sekali doang), angka acak dari -100 hingga 100
+        // Menulis reward sequence (sekali doang), angka acak [-100,100]
         int random_reward = rand() % 201 - 100;
 
         file << random_reward;
