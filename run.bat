@@ -1,3 +1,3 @@
 cd src
-g++ main.cpp buffer.cpp codematrix.cpp node.cpp solver.cpp -o ../bin/main.exe
-"../bin/main.exe"
+g++ utilities.cpp -o ../bin/utilities.exe
+"../bin/utilities.exe"

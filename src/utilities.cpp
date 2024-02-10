@@ -1,12 +1,12 @@
 #include <iostream>
-#include <fstream>
 #include <vector>
+#include <fstream>
 #include <string>
-#include <algorithm>
 #include <chrono>
 
 using namespace std;
 
+// Struct untuk merepresentasikan titik dalam matriks
 struct Point
 {
     int row;
@@ -15,17 +15,25 @@ struct Point
 
 struct Token
 {
-    string identifier;
-    Point position;
+    int identifier;
+    pair<int, int> position;
+
+    // Constructor to initialize Token
+    Token(int id, pair<int, int> pos) : identifier(id), position(pos) {}
 };
 
+// Define struct Sequence
 struct Sequence
 {
     vector<Token> tokens;
     int length;
     int prize;
+
+    // Constructor to initialize Sequence
+    Sequence(const vector<Token> &tok, int len, int pr) : tokens(tok), length(len), prize(pr) {}
 };
 
+// Struct untuk merepresentasikan matriks token
 struct Matrix
 {
     vector<vector<Token>> elements;
@@ -33,94 +41,103 @@ struct Matrix
     int cols;
 };
 
-vector<Sequence> prizeSequences;
-Sequence maxSequence;
-Matrix evaluateMatrix;
-int actualPrizeMax = 0;
-int currPrizeMax = 0;
-
-// Function to check if a point is within matrix bounds
+// Fungsi untuk memeriksa apakah sebuah titik valid dalam matriks
 bool isValid(Point p, int rows, int cols)
 {
     return p.row >= 0 && p.row < rows && p.col >= 0 && p.col < cols;
 }
 
-bool operator<(const Token &t1, const Token &t2)
+// Fungsi untuk mengevaluasi hadiah dari sebuah sekuens token berdasarkan sekuens hadiah yang tersedia
+int evaluateSequence(const Sequence &sequence, const vector<Sequence> &prizeSequences)
 {
-    // Bandingkan identifiernya
-    return t1.identifier < t2.identifier;
+    int prize = 0;
+    for (const auto &prizeSeq : prizeSequences)
+    {
+        for (size_t i = 0; i <= sequence.tokens.size() - prizeSeq.tokens.size(); ++i)
+        {
+            bool found = true;
+            for (size_t j = 0; j < prizeSeq.tokens.size(); ++j)
+            {
+                if (prizeSeq.tokens[j].identifier != sequence.tokens[i + j].identifier)
+                {
+                    found = false;
+                    break;
+                }
+            }
+            if (found)
+            {
+                prize += prizeSeq.prize;
+            }
+        }
+    }
+    return prize;
 }
 
-// Depth-First Search (DFS) function to generate paths and evaluate prizes
-void dfs(Point current, int remainingSteps, Sequence &currentSequence, vector<vector<bool>> &visited)
+// Fungsi rekursif untuk melakukan Depth-First Search (DFS) untuk menemukan jalur optimal
+void dfs(const Point &current, int remainingSteps, const Sequence &currentSequence, const Matrix &evaluateMatrix, const vector<Sequence> &prizeSequences, Sequence &maxSequence, vector<vector<bool>> &visited)
 {
     if (remainingSteps == 0)
     {
-        int prize = 0;
-        for (const auto &sequence : prizeSequences)
+        int prize = evaluateSequence(currentSequence, prizeSequences);
+        if (prize > maxSequence.prize)
         {
-            if (includes(currentSequence.tokens.begin(), currentSequence.tokens.end(),
-                         sequence.tokens.begin(), sequence.tokens.end()))
-            {
-                prize += sequence.prize;
-            }
-        }
-        if (prize > currPrizeMax)
-        {
-            currPrizeMax = prize;
             maxSequence = currentSequence;
+            maxSequence.prize = prize;
         }
     }
     else
     {
-        const vector<Point> directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}; // Up, Down, Left, Right
+        // Daftar arah yang mungkin
+        const vector<Point> directions = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}}; // Right, Left, Down, Up
         for (const auto &dir : directions)
         {
             Point next = {current.row + dir.row, current.col + dir.col};
             if (isValid(next, evaluateMatrix.rows, evaluateMatrix.cols) && !visited[next.row][next.col])
             {
                 visited[next.row][next.col] = true;
-                currentSequence.tokens.push_back(evaluateMatrix.elements[next.row][next.col]);
-                dfs(next, remainingSteps - 1, currentSequence, visited);
-                currentSequence.tokens.pop_back();
+                const Token &nextToken = evaluateMatrix.elements[next.row][next.col];
+                Sequence nextSequence = currentSequence;
+                nextSequence.tokens.push_back(nextToken);
+                dfs(next, remainingSteps - 1, nextSequence, evaluateMatrix, prizeSequences, maxSequence, visited);
                 visited[next.row][next.col] = false;
             }
         }
     }
 }
 
-// Function to print the result
-void printResult(int diff)
+// Fungsi untuk mencetak hasil ke layar
+void printResult(const Sequence &maxSequence, int diff)
 {
-    if (currPrizeMax > 0)
+    if (!maxSequence.tokens.empty())
     {
-        cout << "Maximum reward: " << currPrizeMax << endl;
+        cout << "Maximum reward: " << maxSequence.prize << endl;
         cout << "Sequence: ";
         for (const auto &token : maxSequence.tokens)
         {
             cout << token.identifier << " ";
         }
-        cout << endl
-             << "Paths: " << endl;
+        cout << endl;
+        cout << "Paths: " << endl;
         for (const auto &token : maxSequence.tokens)
         {
-            cout << "(" << token.position.row + 1 << "," << token.position.col + 1 << ")" << endl;
+            cout << "(" << token.position.row + 1 << ", " << token.position.col + 1 << ")" << endl; // Print row, column
         }
+        cout << endl;
+        cout << "Time: " << diff << " ms" << endl;
     }
     else
     {
         cout << "There is no optimal solution for this problem :(" << endl;
     }
-    cout << "Time: " << diff << " ms" << endl;
 }
 
-// Main function
+// Fungsi utama
 int main()
 {
     string filename;
     cout << "Enter the filename to read the matrix and sequences (relative to the test/input folder): ";
     cin >> filename;
-    filename = "../test/" + filename;
+    filename = "../test/input/" + filename;
 
     ifstream inputFile(filename);
     if (!inputFile.is_open())
@@ -129,16 +146,20 @@ int main()
         return 1;
     }
 
+    // Baca buffer size, ukuran matriks, dan inisialisasi matriks
     int bufferSize;
     inputFile >> bufferSize;
-    evaluateMatrix.rows = 0;
-    inputFile >> evaluateMatrix.rows >> evaluateMatrix.cols;
-    evaluateMatrix.elements.resize(evaluateMatrix.rows, vector<Token>(evaluateMatrix.cols));
+    int rows, cols;
+    inputFile >> rows >> cols;
+    Matrix evaluateMatrix;
+    evaluateMatrix.rows = rows;
+    evaluateMatrix.cols = cols;
+    evaluateMatrix.elements.resize(rows, vector<Token>(cols));
 
-    // Read matrix elements
-    for (int i = 0; i < evaluateMatrix.rows; ++i)
+    // Baca matriks dari file
+    for (int i = 0; i < rows; ++i)
     {
-        for (int j = 0; j < evaluateMatrix.cols; ++j)
+        for (int j = 0; j < cols; ++j)
         {
             string identifier;
             inputFile >> identifier;
@@ -146,84 +167,53 @@ int main()
         }
     }
 
-    // Read sequences
+    // Baca jumlah sekuens hadiah dan daftar sekuens hadiah
     int numSequences;
     inputFile >> numSequences;
+    vector<Sequence> prizeSequences(numSequences);
     for (int i = 0; i < numSequences; ++i)
     {
         int length;
         inputFile >> length;
-        Sequence sequence;
-        sequence.length = length;
+        vector<Token> tokens(length);
         for (int j = 0; j < length; ++j)
         {
             string identifier;
             inputFile >> identifier;
-            for (int r = 0; r < evaluateMatrix.rows; ++r)
-            {
-                for (int c = 0; c < evaluateMatrix.cols; ++c)
-                {
-                    if (evaluateMatrix.elements[r][c].identifier == identifier)
-                    {
-                        sequence.tokens.push_back(evaluateMatrix.elements[r][c]);
-                    }
-                }
-            }
+            tokens[j] = {identifier, {-1, -1}}; // Row and col will be set during evaluation
         }
-        inputFile >> sequence.prize;
-        actualPrizeMax += sequence.prize;
-        prizeSequences.push_back(sequence);
+        int prize;
+        inputFile >> prize;
+        prizeSequences[i] = {tokens, length, prize};
     }
+
     inputFile.close();
 
+    // Variables to store the maximum sequence found
+    Sequence maxSequence = {{}, 0, 0};
+
+    // Variables to store the duration of the search
     auto start = chrono::steady_clock::now();
 
-    vector<vector<bool>> visited(evaluateMatrix.rows, vector<bool>(evaluateMatrix.cols, false));
-    for (int i = 0; i < evaluateMatrix.rows; ++i)
+    // DFS untuk mencari jalur optimal
+    vector<vector<bool>> visited(rows, vector<bool>(cols, false)); // Inisialisasi matriks visited
+    for (int i = 0; i < rows; ++i)
     {
-        for (int j = 0; j < evaluateMatrix.cols; ++j)
+        for (int j = 0; j < cols; ++j)
         {
+            Point start = {i, j};
             visited[i][j] = true;
-            Sequence startSequence = {{evaluateMatrix.elements[i][j]}, 1, 0};
-            dfs({i, j}, bufferSize - 1, startSequence, visited);
+            dfs(start, bufferSize - 1, {evaluateMatrix.elements[i][j]}, evaluateMatrix, prizeSequences, maxSequence, visited);
             visited[i][j] = false;
         }
     }
 
+    // Hitung durasi pencarian
     auto end = chrono::steady_clock::now();
-    auto diff = chrono::duration_cast<chrono::milliseconds>(end - start);
+    auto diff = chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-    printResult(diff.count());
-
-    char saveSolution;
-    cout << "Do you want to save the solution? (y/n): ";
-    cin >> saveSolution;
-    if (saveSolution == 'y' || saveSolution == 'Y')
-    {
-        string outputFilename;
-        cout << "Enter the filename to save the solution (will be saved in the test/output folder): ";
-        cin >> outputFilename;
-        outputFilename = "../test/output/" + outputFilename;
-        ofstream outputFile(outputFilename);
-        if (!outputFile.is_open())
-        {
-            cerr << "Unable to open file " << outputFilename << endl;
-            return 1;
-        }
-        outputFile << currPrizeMax << endl;
-        for (const auto &token : maxSequence.tokens)
-        {
-            outputFile << token.identifier << " ";
-        }
-        outputFile << endl;
-        for (const auto &token : maxSequence.tokens)
-        {
-            outputFile << "(" << token.position.row + 1 << "," << token.position.col + 1 << ")" << endl;
-        }
-        outputFile << diff.count() << " ms";
-        outputFile.close();
-        cout << "Solution saved." << endl;
-    }
+    // Cetak hasil
+    printResult(maxSequence, diff.count());
 
     return 0;
 }
