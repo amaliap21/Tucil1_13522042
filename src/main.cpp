@@ -6,8 +6,10 @@
 #include <string>
 #include <cstdlib>
 #include <ctime>
+#include <chrono>
 
 using namespace std;
+using namespace std::chrono;
 
 void writeToFile(const string &filename,
                  int buffer_size,
@@ -50,7 +52,7 @@ void writeToFile(const string &filename,
         }
         file << endl;
 
-        // Menulis reward sequence (hanya sekali) dengan angka acak antara -100 hingga 100
+        // Menulis reward sequence (sekali doang), angka acak dari -100 hingga 100
         int random_reward = rand() % 201 - 100;
 
         file << random_reward;
@@ -93,7 +95,6 @@ void randomizer(int jumlah_token_unik,
         for (int j = 0; j < ukuran_maksimal_sekuens; j++)
         {
             sequences[i][j] = token[rand() % jumlah_token_unik];
-            sequence_rewards[i][j] = rand() % 201 - 100; // nilai -100 hingga 100
         }
     }
 
@@ -104,10 +105,10 @@ void randomMatrixSequence()
 {
     int jumlah_token_unik;
 
-    cout << "Masukkan jumlah token unik: ";
+    // cout << "Masukkan jumlah token unik: ";
     cin >> jumlah_token_unik;
 
-    cout << "Masukkan token: ";
+    // cout << "Masukkan token: ";
     vector<string> tokens(jumlah_token_unik);
     for (int i = 0; i < jumlah_token_unik; i++)
     {
@@ -116,16 +117,16 @@ void randomMatrixSequence()
 
     int ukuran_buffer, width, height, jumlah_sekuens, ukuran_maksimal_sekuens;
 
-    cout << "Masukkan ukuran buffer: ";
+    // cout << "Masukkan ukuran buffer: ";
     cin >> ukuran_buffer;
 
-    cout << "Masukkan ukuran matriks (width height): ";
+    // cout << "Masukkan ukuran matriks (width height): ";
     cin >> width >> height;
 
-    cout << "Masukkan jumlah sekuens: ";
+    // cout << "Masukkan jumlah sekuens: ";
     cin >> jumlah_sekuens;
 
-    cout << "Masukkan ukuran maksimal sekuens: ";
+    // cout << "Masukkan ukuran maksimal sekuens: ";
     cin >> ukuran_maksimal_sekuens;
 
     randomizer(jumlah_token_unik, tokens, ukuran_buffer, width, height, jumlah_sekuens, ukuran_maksimal_sekuens);
@@ -217,8 +218,56 @@ int main(int argc, char *argv[])
     auto sequences = readSequences(inputFile, numberOfSequences);
 
     BreachProtocolSolver solver(bufferSize, matrix, sequences);
+
+    auto start = high_resolution_clock::now();
+
     solver.solve();
     solver.printSolution();
+
+    auto end = high_resolution_clock::now();
+    auto elapsed = duration_cast<milliseconds>(end - start).count();
+    cout << endl
+         << elapsed << " ms" << endl;
+
+    // Simpan hasil ke file .txt
+    cout << endl
+         << "Apakah ingin menyimpan hasil ke file? (y/n): ";
+    string saveToFile;
+    cin >> saveToFile;
+    if (saveToFile == "y" || saveToFile == "Y")
+    {
+        cout << "Masukkan nama file: ";
+        string outputFilename;
+        cin >> outputFilename;
+        outputFilename = "../test/" + outputFilename;
+
+        ofstream outputFile(outputFilename);
+        if (!outputFile.is_open())
+        {
+            cerr << "Gagal membuka file." << endl;
+            return 1;
+        }
+
+        // Menyimpan maxReward dan solusi ke file
+        outputFile << solver.maxReward << endl;
+        for (const auto &token : solver.solutionBuffer)
+        {
+            outputFile << token.value << " ";
+        }
+
+        outputFile << endl;
+        for (const auto &token : solver.solutionBuffer)
+        {
+            outputFile << token.y + 1 << ", " << token.x + 1 << endl;
+        }
+
+        // Menambahkan waktu eksekusi ke akhir file
+        outputFile << endl
+                   << elapsed << " ms";
+
+        outputFile.close();
+        cout << "Hasil telah disimpan ke " << outputFilename << endl;
+    }
 
     return 0;
 }

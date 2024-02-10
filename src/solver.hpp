@@ -27,8 +27,6 @@ public:
     void solve();
     void printSolution();
     bool hasBeenVisited(vector<Token> &visited, Token &token);
-
-private:
     int bufferSize;
     vector<vector<Token>> matrix;
     vector<Sequence> sequences;
