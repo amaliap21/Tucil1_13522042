@@ -1,4 +1,4 @@
-# Tucil1_13522042
+# Cyberpunk 2077
 
 Penyelesaian Cyberpunk 2077 Breach Protocol dengan Algoritma Brute Force
 
@@ -6,8 +6,8 @@ Penyelesaian Cyberpunk 2077 Breach Protocol dengan Algoritma Brute Force
 
 - [Deskripsi Singkat](#deskripsi-singkat)
 - [Kompilasi Program](#kompilasi-program)
-- [Creator](#creator)
 - [Alur Program](#alur-program)
+- [Creator](#creator)
 
 ## Deskripsi Singkat
 
