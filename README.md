@@ -18,7 +18,7 @@ Cyberpunk 2077 Breach Protocol adalah minigame meretas pada permainan video Cybe
 3. Sekuens – sebuah rangkaian token (dua atau lebih) yang harus dicocokkan.
 4. Buffer – jumlah maksimal token yang dapat disusun secara sekuensial.
 
-## Cara Mengompilasi Program
+## Kompilasi Program
 
 1. Clone repositori ini.
 
@@ -40,7 +40,7 @@ run.bat
 run.sh
 ```
 
-## Cara Menggunakan Program / Alur Program
+## Alur Program
 
 ```
 .
