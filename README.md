@@ -31,13 +31,13 @@ $ git clone https://github.com/amaliap21/Tucil1_13522042.git
 ### Windows
 
 ```
-run.bat
+./run.bat
 ```
 
 ### Linux
 
 ```
-run.sh
+./run.sh
 ```
 
 ## Alur Program
