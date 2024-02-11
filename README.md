@@ -37,7 +37,7 @@ $ git clone https://github.com/amaliap21/Tucil1_13522042.git
 ### Linux
 
 ```
-./run.sh
+bash run.sh
 ```
 
 ## Alur Program
