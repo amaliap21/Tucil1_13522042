@@ -1,4 +1,5 @@
 #include "solver.hpp"
+#include "bcolors.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -103,12 +104,13 @@ void randomizer(int jumlah_token_unik,
 
 void randomMatrixSequence()
 {
+    using namespace bcolors;
     int jumlah_token_unik;
 
-    // cout << "Masukkan jumlah token unik: ";
+    cout << yellow << "Masukkan jumlah token unik: " << endc;
     cin >> jumlah_token_unik;
 
-    // cout << "Masukkan token: ";
+    cout << yellow << "Masukkan token: " << endc;
     vector<string> tokens(jumlah_token_unik);
     for (int i = 0; i < jumlah_token_unik; i++)
     {
@@ -117,17 +119,18 @@ void randomMatrixSequence()
 
     int ukuran_buffer, width, height, jumlah_sekuens, ukuran_maksimal_sekuens;
 
-    // cout << "Masukkan ukuran buffer: ";
+    cout << yellow << "Masukkan ukuran buffer: " << endc;
     cin >> ukuran_buffer;
 
-    // cout << "Masukkan ukuran matriks (width height): ";
+    cout << yellow << "Masukkan ukuran matriks (width height): " << endc;
     cin >> width >> height;
 
-    // cout << "Masukkan jumlah sekuens: ";
+    cout << yellow << "Masukkan jumlah sekuens: " << endc;
     cin >> jumlah_sekuens;
 
-    // cout << "Masukkan ukuran maksimal sekuens: ";
+    cout << yellow << "Masukkan ukuran maksimal sekuens: " << endc;
     cin >> ukuran_maksimal_sekuens;
+    cout << endl;
 
     randomizer(jumlah_token_unik, tokens, ukuran_buffer, width, height, jumlah_sekuens, ukuran_maksimal_sekuens);
 }
@@ -175,16 +178,20 @@ vector<Sequence> readSequences(ifstream &inputFile, int numberOfSequences)
 
 int main(int argc, char *argv[])
 {
-    cout << "   _______     ______  ______ _____  _____  _    _ _   _ _  __  ___   ___ ______ ______ \n";
+    using namespace bcolors;
+
+    cout << brightblue << "   _______     ______  ______ _____  _____  _    _ _   _ _  __  ___   ___ ______ ______ \n";
     cout << "  / ____\\ \\   / /  _ \\|  ____|  __ \\|  __ \\| |  | | \\ | | |/ / |__ \\ / _ \\____  |____  |\n";
     cout << " | |     \\ \\_/ /| |_) | |__  | |__) | |__) | |  | |  \\| | ' /     ) | | | |  / /    / / \n";
     cout << " | |      \\   / |  _ <|  __| |  _  /|  ___/| |  | | . ` |  <     / /| | | | / /    / /  \n";
     cout << " | |____   | |  | |_) | |____| | \\ \\| |    | |__| | |\\  | . \\   / /_| |_| |/ /    / /   \n";
     cout << "  \\_____|  |_|  |____/|______|_|  \\_\\_|     \\____/|_| \\_|_|\\_\\ |____|\\___//_/    /_/    \n";
-    cout << "                                                                                        \n";
+    cout << "                                                                                        \n"
+         << endc;
+
     string filename;
 
-    cout << "Apakah ingin menggunakan randomizer untuk matrix dan sequences? (y/n): ";
+    cout << input << "Apakah ingin menggunakan randomizer untuk matrix dan sequences? (y/n): " << endc;
 
     string isRandom;
     cin >> isRandom;
@@ -196,9 +203,10 @@ int main(int argc, char *argv[])
     }
     else
     {
-        cout << "Masukkan nama file: ";
+        cout << input << "Masukkan nama file: " << endc;
         cin >> filename;
         filename = "../test/" + filename;
+        cout << endl;
     }
 
     if (argc > 1)
@@ -209,7 +217,7 @@ int main(int argc, char *argv[])
     ifstream inputFile(filename);
     if (!inputFile.is_open())
     {
-        cerr << "Failed to open file: " << filename << endl;
+        cerr << fail << "Gagal membuka file: " << filename << endc << endl;
         return 1;
     }
 
@@ -238,20 +246,22 @@ int main(int argc, char *argv[])
 
     // Simpan hasil ke file .txt
     cout << endl
-         << "Apakah ingin menyimpan hasil ke file? (y/n): ";
+         << input << "Apakah ingin menyimpan hasil ke file? (y/n): " << endc;
     string saveToFile;
     cin >> saveToFile;
     if (saveToFile == "y" || saveToFile == "Y")
     {
-        cout << "Masukkan nama file: ";
         string outputFilename;
+
+        cout << input << "Masukkan nama file: " << endc;
         cin >> outputFilename;
+        cout << endl;
         outputFilename = "../test/" + outputFilename;
 
         ofstream outputFile(outputFilename);
         if (!outputFile.is_open())
         {
-            cerr << "Gagal membuka file." << endl;
+            cerr << fail << "Gagal membuka file." << endc << endl;
             return 1;
         }
 
@@ -273,7 +283,12 @@ int main(int argc, char *argv[])
                    << elapsed << " ms";
 
         outputFile.close();
-        cout << "Hasil telah disimpan ke " << outputFilename << endl;
+        cout << brightcyan << "Hasil telah disimpan ke " << outputFilename << endc << endl;
+    }
+    else
+    {
+        cout << endl
+             << red << "Hasil tidak disimpan. Selamat tinggal!" << endc << endl;
     }
 
     return 0;
