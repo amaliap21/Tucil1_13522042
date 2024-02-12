@@ -175,6 +175,13 @@ vector<Sequence> readSequences(ifstream &inputFile, int numberOfSequences)
 
 int main(int argc, char *argv[])
 {
+    cout << "   _______     ______  ______ _____  _____  _    _ _   _ _  __  ___   ___ ______ ______ \n";
+    cout << "  / ____\\ \\   / /  _ \\|  ____|  __ \\|  __ \\| |  | | \\ | | |/ / |__ \\ / _ \\____  |____  |\n";
+    cout << " | |     \\ \\_/ /| |_) | |__  | |__) | |__) | |  | |  \\| | ' /     ) | | | |  / /    / / \n";
+    cout << " | |      \\   / |  _ <|  __| |  _  /|  ___/| |  | | . ` |  <     / /| | | | / /    / /  \n";
+    cout << " | |____   | |  | |_) | |____| | \\ \\| |    | |__| | |\\  | . \\   / /_| |_| |/ /    / /   \n";
+    cout << "  \\_____|  |_|  |____/|______|_|  \\_\\_|     \\____/|_| \\_|_|\\_\\ |____|\\___//_/    /_/    \n";
+    cout << "                                                                                        \n";
     string filename;
 
     cout << "Apakah ingin menggunakan randomizer untuk matrix dan sequences? (y/n): ";
